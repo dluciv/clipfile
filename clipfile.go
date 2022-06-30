@@ -17,19 +17,20 @@ func min[T constraints.Ordered](a, b T) T {
 }
 
 type clipFile struct {
-	fh        uint64 // not recommended to use though
-	path      string
-	mode      int
-	buffer    []byte
-	opened    sync.Mutex
+	fh     uint64 // not recommended to use though
+	path   string
+	mode   int
+	buffer []byte
+	//opened    sync.Mutex
 	needRead  bool
 	needFlush bool
 }
 
 var clipFiles = make(map[string]*clipFile)
+var clipFilesLock = sync.RWMutex{}
 
 func clipFileSize(path string) int {
-	if f, alreadyOpened := clipFiles[path]; !alreadyOpened {
+	if f, alreadyOpened := getcf(path); !alreadyOpened {
 		f = open(path, fuse.O_RDONLY)
 		defer f.close()
 		return f.size()
@@ -46,8 +47,15 @@ func (f *clipFile) size() int {
 	}
 }
 
+func getcf(path string) (*clipFile, bool) {
+	clipFilesLock.RLock()
+	f, ok := clipFiles[path]
+	clipFilesLock.RUnlock()
+	return f, ok
+}
+
 func open(path string, mode int) (f *clipFile) {
-	f, exist := clipFiles[path]
+	f, exist := getcf(path)
 	if !exist {
 		/*
 			fuse.O_RDONLY = 0x0		// <
@@ -63,7 +71,9 @@ func open(path string, mode int) (f *clipFile) {
 			needRead:  mode != fuse.O_WRONLY,
 			needFlush: mode != fuse.O_RDONLY,
 		}
+		clipFilesLock.Lock()
 		clipFiles[path] = f
+		clipFilesLock.Unlock()
 
 		// When opening for read, we need to report correct size immediately
 		if mode == fuse.O_RDONLY {
@@ -128,6 +138,8 @@ func (f *clipFile) flush() (err int) {
 
 func (f *clipFile) close() int {
 	f.flush()
-	defer delete(clipFiles, f.path)
+	clipFilesLock.Lock()
+	delete(clipFiles, f.path)
+	clipFilesLock.Unlock()
 	return 0
 }

@@ -59,7 +59,8 @@ func (fs *clipFs) Read(path string, buff []byte, ofst int64, fh uint64) int {
 	case "/" + infoFilename:
 		return copy(buff, infoContents[ofst:])
 	case "/" + clipFilename:
-		d, _ := clipFiles[path].read(ofst)
+		dx, _ := getcf(path)
+		d, _ := dx.read(ofst)
 		log.Printf(" - - read returned '%s'", string(d))
 		n := copy(buff, d)
 		log.Printf(" - - got: '%s'", string(buff))
@@ -71,9 +72,7 @@ func (fs *clipFs) Read(path string, buff []byte, ofst int64, fh uint64) int {
 
 func (fs *clipFs) Truncate(path string, size int64, fh uint64) int {
 	log.Printf(" - truncate '%s' @ %d", path, size)
-	f := clipFiles[path]
-	f.opened.Lock()
-	defer f.opened.Unlock()
+	f, _ := getcf(path)
 	return f.trunc(size)
 }
 
@@ -81,18 +80,14 @@ func (fs *clipFs) Truncate(path string, size int64, fh uint64) int {
 // The FileSystemBase implementation returns -ENOSYS.
 func (fs *clipFs) Write(path string, buff []byte, ofst int64, fh uint64) int {
 	log.Printf(" - write '%s' [%d] @ %d : '%s' ", path, fh, ofst, string(buff))
-	f := clipFiles[path]
-	f.opened.Lock()
-	defer f.opened.Unlock()
+	f, _ := getcf(path)
 	return f.write(buff, ofst)
 }
 
 // Flush flushes cached file data.
 // The FileSystemBase implementation returns -ENOSYS.
 func (fs *clipFs) Flush(path string, fh uint64) int {
-	f := clipFiles[path]
-	f.opened.Lock()
-	defer f.opened.Unlock()
+	f, _ := getcf(path)
 
 	log.Printf(" - flush '%s'", path)
 	return f.flush()
@@ -106,10 +101,8 @@ func (fs *clipFs) Release(path string, fh uint64) int {
 	case "/" + infoFilename:
 		return 0
 	case "/" + clipFilename:
-		f := clipFiles[path]
-		f.opened.Lock()
+		f, _ := getcf(path)
 		f.close()
-		defer f.opened.Unlock()
 		return 0
 	default:
 		return -fuse.ENOENT
