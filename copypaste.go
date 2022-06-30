@@ -11,7 +11,7 @@ func clipCopy(contents []byte) syscall.Errno {
 	cmd := exec.Command("cccp", "c")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		log.Panicf("Failed to copy to clipboard, error code: %d", err)
+		log.Panicf("Failed to copy to clipboard, error: %s", err.Error())
 		return syscall.EIO
 	}
 
@@ -34,7 +34,7 @@ func clipCopy(contents []byte) syscall.Errno {
 func clipPaste() ([]byte, syscall.Errno) {
 	out, err := exec.Command("cccp", "p").Output()
 	if err != nil {
-		log.Panicf("Failed to paste from clipboard, error code: %d", err)
+		log.Panicf("Failed to paste from clipboard, error: %s", err.Error())
 		return nil, syscall.EIO
 	}
 	for _, c := range string(out) {
