@@ -85,9 +85,9 @@ func open(path string, mode int) (f *clipFile) {
 
 func (f *clipFile) read(ofst int64) ([]byte, int) {
 	if f.needRead {
-		if data, err := clipPaste(); err != 0 {
+		if data, err := currentClipboard.ReadAll("clipboard"); err != nil {
 			log.Printf(" - - got %d error", err)
-			return nil, int(err)
+			return nil, -1
 		} else {
 			log.Printf(" - - got '%s' data", data)
 			f.buffer = data
@@ -128,9 +128,10 @@ func (f *clipFile) trunc(size int64) int {
 
 func (f *clipFile) flush() (err int) {
 	if f.needFlush {
-		err = int(clipCopy(f.buffer))
-		if err == 0 {
+		if currentClipboard.WriteAll("clipboard", f.buffer) == nil {
 			f.needFlush = false
+		} else {
+			err = -1
 		}
 	}
 	return

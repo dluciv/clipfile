@@ -9,10 +9,10 @@ import (
 
 const (
 	infoFilename = "info"
-	infoContents = "cccp\nautodetect\n"
-
 	clipFilename = "clip"
 )
+
+var infoContents = "?"
 
 type clipFs struct {
 	fuse.FileSystemBase

@@ -1,45 +1,92 @@
 package main
 
 import (
-	"io"
 	"log"
 	"os/exec"
-	"syscall"
+
+	"github.com/zyedidia/clipper"
 )
 
-func clipCopy(contents []byte) syscall.Errno {
+/*
+type Clipboard interface {
+	// Init initializes the clipboard and returns an error if it is not
+	// accessible
+	Init() error
+	// ReadAll returns the contents of the clipboard register 'reg'
+	ReadAll(reg string) ([]byte, error)
+	// WriteAll writes 'p' to the clipboard register 'reg'
+	WriteAll(reg string, p []byte) error
+}
+*/
+
+type cccp struct {
+	cccpBackend string
+}
+
+var _ clipper.Clipboard = (*cccp)(nil)
+
+func (c *cccp) Init() (err error) {
+	d, err := exec.Command("cccp", "b").Output()
+	c.cccpBackend = string(d)
+	return
+}
+
+func (c *cccp) ReadAll(reg string) (result []byte, err error) {
+	result, err = exec.Command("cccp", "p").Output()
+	if err != nil {
+		log.Panicf("Failed to paste from clipboard, error: %s", err.Error())
+	}
+	return
+}
+
+type unsupRegister struct {
+	register string
+}
+
+func (r unsupRegister) Error() string {
+	return r.register
+}
+
+func (c *cccp) WriteAll(reg string, contents []byte) (err error) {
+	if reg != "clipboard" {
+		return unsupRegister{register: reg}
+	}
+
 	cmd := exec.Command("cccp", "c")
+
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Panicf("Failed to copy to clipboard, error: %s", err.Error())
-		return syscall.EIO
+		return
 	}
 
 	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, string(contents))
+		stdin.Write(contents)
 		// io.WriteString(stdin, "\x0d") // ^D
+		defer stdin.Close()
 	}()
 
-	stdout, err := cmd.CombinedOutput()
-	_ = stdout
+	_, err = cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
-		return syscall.EIO
 	}
 
-	return syscall.F_OK
+	return
 }
 
-func clipPaste() ([]byte, syscall.Errno) {
-	out, err := exec.Command("cccp", "p").Output()
-	if err != nil {
-		log.Panicf("Failed to paste from clipboard, error: %s", err.Error())
-		return nil, syscall.EIO
-	}
-	for _, c := range string(out) {
-		log.Printf(" - - - - 0x%x = '%c'", c, c)
-	}
+var currentClipboard clipper.Clipboard = nil
 
-	return out, syscall.F_OK
+func initClipboards(preferCCCP bool) (clipper.Clipboard, error) {
+	if preferCCCP {
+		clipper.Clipboards = append(
+			[]clipper.Clipboard{&cccp{}},
+			clipper.Clipboards...,
+		)
+	} else {
+		clipper.Clipboards = append(
+			clipper.Clipboards,
+			[]clipper.Clipboard{&cccp{}}...,
+		)
+	}
+	return clipper.GetClipboard(clipper.Clipboards...)
 }
