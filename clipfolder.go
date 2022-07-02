@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/winfsp/cgofuse/fuse"
 )
@@ -42,14 +41,12 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 		stat.Mode = fuse.S_IFREG | 0o622
 		stat.Size = int64(clipFileSize(path))
 		log.Printf(" - - clipfile size: %d", stat.Size)
-
-		// stat.Mode = fuse.S_IFCHR | 0o620 // owner rw, others write
-		// stat.Rdev = 0xfefefefefefefefe
 	default:
 		return -fuse.ENOENT
 	}
-	stat.Uid = uint32(os.Geteuid())
-	stat.Gid = uint32(os.Getegid())
+	uid, gid, _ := fuse.Getcontext() // uid, gid, pid
+	stat.Uid = uid
+	stat.Gid = gid
 	return 0
 }
 
