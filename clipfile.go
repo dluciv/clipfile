@@ -75,6 +75,7 @@ func (f *clipFile) open(path string, mode int) int {
 	} else if f.mode != fuse.O_RDONLY {
 		return -fuse.EALREADY
 	}
+	f.aTime = fuse.NewTimespec(time.Now())
 	f.openCount++
 	log.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
 	return 0
@@ -146,10 +147,8 @@ func (f *clipFile) close() int {
 	log.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
 	if f.openCount == 0 {
 		// reset it
-		*f = clipFile{
-			api:  f.api,
-			path: f.path,
-		}
+		f.mode = 0
+		f.buffer = []byte{}
 	}
 	f.aTime = fuse.NewTimespec(time.Now())
 	log.Printf(" - - closing '%s'.", f.path)
