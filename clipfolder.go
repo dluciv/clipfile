@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"reflect"
 	"time"
 
@@ -72,7 +71,7 @@ func (fs *clipFs) getCF(path string) *clipFile {
 
 func (fs *clipFs) Open(path string, flags int) (errc int, fh uint64) {
 	_, _, pid := fuse.Getcontext() // uid, gid, pid
-	log.Printf("Opening '%s', flags: 0x%x = 0b%b by %d", path, flags, flags, pid)
+	dbgLog.Printf("Opening '%s', flags: 0x%x = 0b%b by %d", path, flags, flags, pid)
 	switch path {
 	case "/" + infoFilename:
 		return 0, 0
@@ -86,7 +85,7 @@ func (fs *clipFs) Open(path string, flags int) (errc int, fh uint64) {
 }
 
 func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
-	log.Printf(" - getattr '%s'", path)
+	dbgLog.Printf(" - getattr '%s'", path)
 	switch path {
 	case "/":
 		stat.Mode = fuse.S_IFDIR | 0o555
@@ -109,7 +108,7 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 		} else {
 			return -fuse.ENOENT
 		}
-		log.Printf(" - - clipfile size: %d", stat.Size)
+		dbgLog.Printf(" - - clipfile size: %d", stat.Size)
 	}
 	uid, gid, _ := fuse.Getcontext() // uid, gid, pid
 	stat.Uid = uid
@@ -118,16 +117,16 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 }
 
 func (fs *clipFs) Read(path string, buff []byte, ofst int64, fh uint64) int {
-	log.Printf(" - read '%s' [%d] @ %d (%d)... ", path, fh, ofst, len(buff))
+	dbgLog.Printf(" - read '%s' [%d] @ %d (%d)... ", path, fh, ofst, len(buff))
 	switch path {
 	case "/" + infoFilename:
 		return copy(buff, fs.infoContents[ofst:])
 	default: // clipfiles here
 		if cf := fs.getCF(path); cf != nil {
 			d, _ := cf.read(ofst)
-			log.Printf(" - - read returned '%s'", string(d))
+			dbgLog.Printf(" - - read returned '%s'", string(d))
 			n := copy(buff, d)
-			log.Printf(" - - got: '%s'", string(buff))
+			dbgLog.Printf(" - - got: '%s'", string(buff))
 			return n
 		} else {
 			return -fuse.ENOENT
@@ -136,7 +135,7 @@ func (fs *clipFs) Read(path string, buff []byte, ofst int64, fh uint64) int {
 }
 
 func (fs *clipFs) Truncate(path string, size int64, fh uint64) int {
-	log.Printf(" - truncate '%s' @ %d", path, size)
+	dbgLog.Printf(" - truncate '%s' @ %d", path, size)
 
 	if cf := fs.getCF(path); cf != nil {
 		return cf.trunc(size)
@@ -148,7 +147,7 @@ func (fs *clipFs) Truncate(path string, size int64, fh uint64) int {
 // Write writes data to a file.
 // The FileSystemBase implementation returns -ENOSYS.
 func (fs *clipFs) Write(path string, buff []byte, ofst int64, fh uint64) int {
-	log.Printf(" - write '%s' [%d] @ %d : '%s' ", path, fh, ofst, string(buff))
+	dbgLog.Printf(" - write '%s' [%d] @ %d : '%s' ", path, fh, ofst, string(buff))
 
 	if cf := fs.getCF(path); cf != nil {
 		return cf.write(buff, ofst)
@@ -160,7 +159,7 @@ func (fs *clipFs) Write(path string, buff []byte, ofst int64, fh uint64) int {
 // Flush flushes cached file data.
 // The FileSystemBase implementation returns -ENOSYS.
 func (fs *clipFs) Flush(path string, fh uint64) int {
-	log.Printf(" - flush '%s'", path)
+	dbgLog.Printf(" - flush '%s'", path)
 
 	if cf := fs.getCF(path); cf != nil {
 		return cf.flush()
@@ -173,7 +172,7 @@ func (fs *clipFs) Flush(path string, fh uint64) int {
 // The FileSystemBase implementation returns -ENOSYS.
 func (fs *clipFs) Release(path string, fh uint64) int {
 	_, _, pid := fuse.Getcontext() // uid, gid, pid
-	log.Printf("Close '%s' by %d", path, pid)
+	dbgLog.Printf("Close '%s' by %d", path, pid)
 	switch path {
 	case "/" + infoFilename:
 		return 0

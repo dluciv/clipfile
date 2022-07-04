@@ -9,6 +9,11 @@ import (
 	"github.com/winfsp/cgofuse/fuse"
 )
 
+var (
+	errLog *log.Logger = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	dbgLog *log.Logger = log.New(os.Stderr, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+)
+
 func main() {
 	fDebug := flag.Bool("debug", false, "Debug")
 	fCCCP := flag.Bool("cccp", false, "Prefer CCCP backend over everything")
@@ -18,8 +23,8 @@ func main() {
 	flag.Parse()
 
 	if !*fDebug {
-		log.SetFlags(0)
-		log.SetOutput(ioutil.Discard)
+		dbgLog.SetFlags(0)
+		dbgLog.SetOutput(ioutil.Discard)
 	}
 
 	if *fMountPoint == "" {

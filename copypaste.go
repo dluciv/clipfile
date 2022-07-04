@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os/exec"
 
 	"github.com/zyedidia/clipper"
@@ -22,7 +21,7 @@ func (c *cccp) Init() (err error) {
 func (c *cccp) ReadAll(reg string) (result []byte, err error) {
 	result, err = exec.Command("cccp", "p").Output()
 	if err != nil {
-		log.Panicf("Failed to paste from clipboard, error: %s", err.Error())
+		errLog.Panicf("Failed to paste from clipboard, error: %s", err.Error())
 	}
 	return
 }
@@ -36,7 +35,7 @@ func (c *cccp) WriteAll(reg string, contents []byte) (err error) {
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		log.Panicf("Failed to copy to clipboard, error: %s", err.Error())
+		errLog.Panicf("Failed to copy to clipboard, error: %s", err.Error())
 		return
 	}
 
@@ -48,7 +47,7 @@ func (c *cccp) WriteAll(reg string, contents []byte) (err error) {
 
 	_, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		errLog.Fatal(err)
 	}
 
 	return

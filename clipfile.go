@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/winfsp/cgofuse/fuse"
@@ -77,22 +76,22 @@ func (f *clipFile) open(path string, mode int) int {
 	}
 	f.aTime = fuse.NewTimespec(time.Now())
 	f.openCount++
-	log.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
+	dbgLog.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
 	return 0
 }
 
 func (f *clipFile) read(ofst int64) ([]byte, int) {
 	if f.needRead {
 		if data, err := f.api.ReadAll(f.path[1:]); err != nil {
-			log.Printf(" - - got %d error", err)
+			errLog.Printf(" - - got %d error", err)
 			return nil, -1
 		} else {
-			log.Printf(" - - got '%s' data", data)
+			dbgLog.Printf(" - - got '%s' data", data)
 			f.buffer = data
 			f.needRead = false
 		}
 	}
-	log.Printf(" - - reading clipboard, got '%s'...", string(f.buffer))
+	dbgLog.Printf(" - - reading clipboard, got '%s'...", string(f.buffer))
 	f.aTime = fuse.NewTimespec(time.Now())
 	return f.buffer[ofst:], 0
 }
@@ -144,13 +143,13 @@ func (f *clipFile) close() int {
 	// delete(clipFiles, f.path)
 	// clipFilesLock.Unlock()
 	f.openCount--
-	log.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
+	dbgLog.Printf(" - - '%s' open count <- %d", f.path, f.openCount)
 	if f.openCount == 0 {
 		// reset it
 		f.mode = 0
 		f.buffer = []byte{}
 	}
 	f.aTime = fuse.NewTimespec(time.Now())
-	log.Printf(" - - closing '%s'.", f.path)
+	dbgLog.Printf(" - - closing '%s'.", f.path)
 	return 0
 }
