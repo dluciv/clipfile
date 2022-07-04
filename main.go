@@ -5,40 +5,32 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"reflect"
 
 	"github.com/winfsp/cgofuse/fuse"
 )
 
 func main() {
 	fDebug := flag.Bool("debug", false, "Debug")
-	fCCCP := flag.Bool("cccp", false, "Prefer CCCP backend")
+	fCCCP := flag.Bool("cccp", false, "Prefer CCCP backend over everything")
+	fWayl := flag.Bool("wayland", false, "Prefer Wayland backend over XClip (when both are available)")
 	fMountPoint := flag.String("mountpoint", "", "Mount point")
 
 	flag.Parse()
-
-	if *fMountPoint == "" {
-		flag.Usage()
-		os.Exit(2)
-	}
-
-	if ccc, err := initClipboards(*fCCCP); err == nil {
-		currentClipboard = ccc
-	} else {
-		os.Exit(3)
-	}
-
-	if cc, ok := currentClipboard.(*cccp); ok {
-		infoContents = "cccp\n" + cc.cccpBackend + "\n"
-	} else {
-		infoContents = "clipper\n" + reflect.TypeOf(currentClipboard).Elem().Name() + "\n"
-	}
 
 	if !*fDebug {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
 
-	host := fuse.NewFileSystemHost(&clipFs{})
-	host.Mount(*fMountPoint, []string{})
+	if *fMountPoint == "" {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if clipboard, err := initClipboards(*fCCCP, *fWayl); err != nil {
+		os.Exit(3)
+	} else {
+		host := fuse.NewFileSystemHost(NewClipFs(clipboard))
+		host.Mount(*fMountPoint, []string{})
+	}
 }

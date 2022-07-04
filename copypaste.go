@@ -7,18 +7,6 @@ import (
 	"github.com/zyedidia/clipper"
 )
 
-/*
-type Clipboard interface {
-	// Init initializes the clipboard and returns an error if it is not
-	// accessible
-	Init() error
-	// ReadAll returns the contents of the clipboard register 'reg'
-	ReadAll(reg string) ([]byte, error)
-	// WriteAll writes 'p' to the clipboard register 'reg'
-	WriteAll(reg string, p []byte) error
-}
-*/
-
 type cccp struct {
 	cccpBackend string
 }
@@ -39,17 +27,9 @@ func (c *cccp) ReadAll(reg string) (result []byte, err error) {
 	return
 }
 
-type unsupRegister struct {
-	register string
-}
-
-func (r unsupRegister) Error() string {
-	return r.register
-}
-
 func (c *cccp) WriteAll(reg string, contents []byte) (err error) {
 	if reg != "clipboard" {
-		return unsupRegister{register: reg}
+		return &clipper.ErrInvalidReg{Reg: reg}
 	}
 
 	cmd := exec.Command("cccp", "c")
@@ -74,9 +54,22 @@ func (c *cccp) WriteAll(reg string, contents []byte) (err error) {
 	return
 }
 
-var currentClipboard clipper.Clipboard = nil
-
-func initClipboards(preferCCCP bool) (clipper.Clipboard, error) {
+func initClipboards(preferCCCP, preferWayland bool) (clipper.Clipboard, error) {
+	if preferWayland {
+		xclipind := -1
+		wayldind := -1
+		for i, c := range clipper.Clipboards {
+			switch c.(type) {
+			case *clipper.Xclip:
+				xclipind = i
+			case *clipper.Wayland:
+				wayldind = i
+			}
+		}
+		if wayldind >= xclipind && xclipind >= 0 {
+			clipper.Clipboards[xclipind], clipper.Clipboards[wayldind] = clipper.Clipboards[wayldind], clipper.Clipboards[xclipind]
+		}
+	}
 	if preferCCCP {
 		clipper.Clipboards = append(
 			[]clipper.Clipboard{&cccp{}},
