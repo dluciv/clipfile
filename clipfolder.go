@@ -126,7 +126,7 @@ func (fs *clipFs) Read(path string, buff []byte, ofst int64, fh uint64) int {
 			d, _ := cf.read(ofst)
 			dbgLog.Printf(" - - read returned '%s'", string(d))
 			n := copy(buff, d)
-			dbgLog.Printf(" - - got: '%s'", string(buff))
+			dbgLog.Printf(" - - got: '%s'", string(buff[:n]))
 			return n
 		} else {
 			return -fuse.ENOENT
