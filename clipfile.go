@@ -70,8 +70,8 @@ func (f *clipFile) open(path string, mode int) int {
 		// clipFiles[path] = f
 		// clipFilesLock.Unlock()
 
-		// When opening for read, we need to report correct size immediately
-		if mode == fuse.O_RDONLY {
+		// When opening for read or append or RW, we need to read & report correct size immediately
+		if mode != fuse.O_WRONLY {
 			f.read(0)
 		}
 	} else if f.mode != fuse.O_RDONLY {
@@ -100,17 +100,15 @@ func (f *clipFile) read(ofst int64) ([]byte, int) {
 }
 
 func (f *clipFile) write(data []byte, ofst int64) (n int) {
-	if f.needRead {
-		if _, err := f.read(0); err != 0 {
-			return err
-		}
-	}
+	f.read(0) // Will only read when needed, if not already
+
 	// https://github.com/winfsp/cgofuse/blob/ce7e5a65cac7bacaba0ca95c11610aff8b6e0970/examples/memfs/memfs.go#L301
 	endofst := int(ofst) + len(data)
 	if endofst > len(f.buffer) {
 		f.buffer = append(f.buffer, make([]byte, endofst-len(f.buffer))...)
 	}
 	n = copy(f.buffer[ofst:endofst], data)
+	dbgLog.Printf(" - - wrtten to '%s', now data is '%s'", f.path, string(f.buffer))
 	f.needFlush = true
 	/*
 		tmsp := fuse.Now()
@@ -129,6 +127,7 @@ func (f *clipFile) trunc(size int64) int {
 
 func (f *clipFile) flush() (err int) {
 	if f.needFlush {
+		dbgLog.Printf(" - - copied to '%s', data is '%s'", f.path, string(f.buffer))
 		if f.api.WriteAll(f.path[1:], f.buffer) == nil {
 			f.needFlush = false
 		} else {

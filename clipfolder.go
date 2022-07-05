@@ -85,7 +85,7 @@ func (fs *clipFs) Open(path string, flags int) (errc int, fh uint64) {
 }
 
 func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) {
-	dbgLog.Printf(" - getattr '%s'", path)
+	//dbgLog.Printf(" - getattr '%s'", path)
 	switch path {
 	case "/":
 		stat.Mode = fuse.S_IFDIR | 0o555
@@ -100,7 +100,11 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 		stat.Atim = fs.cTime
 	default: // clipfiles here
 		if cf := fs.getCF(path); cf != nil {
-			stat.Mode = fuse.S_IFREG | 0o622
+			if path == "/"+primFilename { // let primary selection be RO
+				stat.Mode = fuse.S_IFREG | 0o400
+			} else {
+				stat.Mode = fuse.S_IFREG | 0o622
+			}
 			stat.Size = int64(cf.size())
 
 			stat.Ctim = cf.cTime
@@ -108,7 +112,7 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 		} else {
 			return -fuse.ENOENT
 		}
-		dbgLog.Printf(" - - clipfile size: %d", stat.Size)
+		dbgLog.Printf(" - - clipfile '%s' size: %d", path, stat.Size)
 	}
 	uid, gid, _ := fuse.Getcontext() // uid, gid, pid
 	stat.Uid = uid
