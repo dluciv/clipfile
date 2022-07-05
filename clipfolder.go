@@ -34,9 +34,9 @@ func NewClipFs(api clipper.Clipboard) (cfs *clipFs) {
 	cfs = &clipFs{}
 
 	if cc, ok := api.(*cccp); ok {
-		cfs.infoContents = "cccp\n" + cc.cccpBackend + "\n"
+		cfs.infoContents = "API=cccp\nBACKEND=" + cc.cccpBackend + "\n"
 	} else {
-		cfs.infoContents = "clipper\n" + reflect.TypeOf(api).Elem().Name() + "\n"
+		cfs.infoContents = "API=clipper\nBACKEND=" + reflect.TypeOf(api).Elem().Name() + "\n"
 	}
 
 	cfs.cTime = fuse.NewTimespec(time.Now())
