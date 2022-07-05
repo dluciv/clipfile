@@ -1,4 +1,4 @@
-module clipfile
+module clipfs
 
 go 1.18
 

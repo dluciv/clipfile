@@ -47,6 +47,9 @@ func (f *clipFile) size() int {
 	} else if f.mode == fuse.O_WRONLY {
 		return 0
 	} else {
+		if f.needRead {
+			f.read(0)
+		}
 		return len(f.buffer)
 	}
 }
