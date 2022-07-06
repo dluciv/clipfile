@@ -2,7 +2,7 @@
 
 ## Why?
 
-As for me, it is very cinvenient way to automate when mixing manual text editing and scripting something.
+IMHO it is very cinvenient way to automate when mixing manual text editing and scripting something.
 
 ## Usage
 
@@ -29,8 +29,8 @@ and leave it working
 It will create virtual FS with files:
 
 * `info` with metainformation about how it works with clipboard
-* `clipboard` -- readable (`< clipboard`), writeable (`> clipboard`) and appendable (`>> clipboard`) file, synchronizing with clipboard contents
-* `primary` (Linux only) -- readable file wrom which primary (immediate) selection can be read
+* `clipboard` — readable (`< clipboard`), writeable (`> clipboard`) and appendable (`>> clipboard`) file, synchronizing with clipboard contents
+* `primary` (Linux only) — readable file wrom which primary (immediate) selection can be read
 
 `clipboard` file is even editable with some editors, which just do write file in-place:  MCEdit, and Vim work correctly.
 The most editors fail though: Emacs, Micro, Nano, Far Manager (in Both Windows and Unix) like to create tempoary files, which is not allowed by clipfs.
