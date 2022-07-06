@@ -19,7 +19,7 @@ and leave it working
 * `some_folder` should already exist in Linux and OS X and should not exist in Windows
 * launch without parameters to see different options
 
-### Stop
+### Shutdown
 
 * In Windows, just interrupt the program (Ctrl+C or terminate the process)
 * In Unix, just `$ umount some_folder`
