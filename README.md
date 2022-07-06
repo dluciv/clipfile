@@ -8,16 +8,21 @@ As for me, it is very cinvenient way to automate when mixing manual text editing
 
 ### Launch
 
-    $ go run . -mountpoint {some folder}
+    $ go run . -mountpoint some_folder
 
 or, if built
 
-    $ ./clipfs -mountpoint {some folder}
+    $ ./clipfs -mountpoint some_folder
 
 and leave it working
 
-* `{some folder}` should already exist in Linux and OS X and should not exist in Windows
+* `some_folder` should already exist in Linux and OS X and should not exist in Windows
 * launch without parameters to see different options
+
+### Stop
+
+* In Windows, just interrupt the program (Ctrl+C or terminate the process)
+* In Unix, just `$ umount some_folder`
 
 ### Have fun
 
