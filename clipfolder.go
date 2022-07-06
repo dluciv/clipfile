@@ -20,9 +20,10 @@ type clipFs struct {
 	primary      *clipFile
 	infoContents string // Small metainfo stored right there
 	cTime        fuse.Timespec
+	needMTime    bool
 }
 
-func NewClipFs(api clipper.Clipboard) (cfs *clipFs) {
+func NewClipFs(api clipper.Clipboard, mTime bool) (cfs *clipFs) {
 	// is there any way to exress this better in Go?..
 	hasprimary := false
 	if _, ok := api.(*clipper.Xclip); ok {
@@ -101,17 +102,18 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 	default: // clipfiles here
 		if cf := fs.getCF(path); cf != nil {
 			/*
-			if path == "/"+primFilename { // let primary selection be RO
-				stat.Mode = fuse.S_IFREG | 0o400
-			} else {
-				stat.Mode = fuse.S_IFREG | 0o622
-			}
+				if path == "/"+primFilename { // let primary selection be RO
+					stat.Mode = fuse.S_IFREG | 0o400
+				} else {
+					stat.Mode = fuse.S_IFREG | 0o622
+				}
 			*/
 			stat.Mode = fuse.S_IFREG | 0o622
 			stat.Size = int64(cf.size())
-
-			stat.Ctim = cf.cTime
-			stat.Mtim = cf.mTime
+			if fs.needMTime {
+				stat.Ctim = cf.cTime
+				stat.Mtim = cf.mTime
+			}
 		} else {
 			return -fuse.ENOENT
 		}
