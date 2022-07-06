@@ -100,11 +100,14 @@ func (fs *clipFs) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errc int) 
 		stat.Atim = fs.cTime
 	default: // clipfiles here
 		if cf := fs.getCF(path); cf != nil {
+			/*
 			if path == "/"+primFilename { // let primary selection be RO
 				stat.Mode = fuse.S_IFREG | 0o400
 			} else {
 				stat.Mode = fuse.S_IFREG | 0o622
 			}
+			*/
+			stat.Mode = fuse.S_IFREG | 0o622
 			stat.Size = int64(cf.size())
 
 			stat.Ctim = cf.cTime
