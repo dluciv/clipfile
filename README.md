@@ -26,20 +26,13 @@ and leave it working
 
 ### Have fun
 
-It will create virtual FS with files:
+After launch, it will create virtual FS with files:
 
 * `info` with metainformation about how it works with clipboard
 * `clipboard` — readable (`< clipboard`), writeable (`> clipboard`) and appendable (`>> clipboard`) file, synchronizing with clipboard contents
 * `primary` (Linux only) — readable (and writable!) file wrom which primary (immediate) selection can be read
 
-`clipboard` file is even editable with the most of editors, which just do write file in-place:  MCEdit, Vim, Emacs, Micro and Nano work correctly. Far Manager (in Both Windows and Unix) fails for now.
-
-*Note: Emacs, Micro and Nano check file modification time and claim about file modification by external program periodically while editing, so by default clipfs does not update it.*
-
-TODO:
-
-* resolve Far Manager incompatibility
-* improve time modification ans switch it on by default
+`clipboard` file is even editable with the most of editors, which just do write file in-place:  MCEdit, Vim, Emacs, Micro and Nano work correctly.
 
 ## Build
 
@@ -57,7 +50,3 @@ TODO:
     $ https://github.com/winfsp/cgofuse#how-to-build
     $ go get
     $ go build
-
-
-
-    go run . [-d] -m /tmp/....

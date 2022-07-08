@@ -16,7 +16,7 @@ var (
 
 func main() {
 	fDebug := flag.Bool("debug", false, "Debug")
-	fMtime := flag.Bool("mtime", false, "Modify time attributes")
+	fMtime := flag.Bool("mtime", true, "Modify time attributes; switch off if having troubles with your favorite editor")
 	fCCCP := flag.Bool("cccp", false, "Prefer CCCP backend over everything")
 	fWayl := flag.Bool("wayland", false, "Prefer Wayland backend over XClip (when both are available)")
 	fMountPoint := flag.String("mountpoint", "", "Mount point")

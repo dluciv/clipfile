@@ -23,7 +23,7 @@ type clipFs struct {
 	needMTime    bool
 }
 
-func NewClipFs(api clipper.Clipboard, mTime bool) (cfs *clipFs) {
+func NewClipFs(api clipper.Clipboard, needMTime bool) (cfs *clipFs) {
 	// is there any way to exress this better in Go?..
 	hasprimary := false
 	if _, ok := api.(*clipper.Xclip); ok {
@@ -32,15 +32,16 @@ func NewClipFs(api clipper.Clipboard, mTime bool) (cfs *clipFs) {
 		hasprimary = true
 	}
 
-	cfs = &clipFs{}
+	cfs = &clipFs{
+		cTime:     fuse.NewTimespec(time.Now()),
+		needMTime: needMTime,
+	}
 
 	if cc, ok := api.(*cccp); ok {
 		cfs.infoContents = "API=cccp\nBACKEND=" + cc.cccpBackend + "\n"
 	} else {
 		cfs.infoContents = "API=clipper\nBACKEND=" + reflect.TypeOf(api).Elem().Name() + "\n"
 	}
-
-	cfs.cTime = fuse.NewTimespec(time.Now())
 
 	cfs.clipboard = &clipFile{
 		api:   api,

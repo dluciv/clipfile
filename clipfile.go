@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/winfsp/cgofuse/fuse"
@@ -40,6 +41,10 @@ type clipFile struct {
 func (f *clipFile) size() int {
 	if f.openCount == 0 {
 		if data, err := f.api.ReadAll(f.path[1:]); err == nil {
+			if !bytes.Equal(data, f.buffer) {
+				f.aTime = fuse.NewTimespec(time.Now())
+				f.mTime = f.aTime
+			}
 			return len(data)
 		} else {
 			return -fuse.EACCES
@@ -90,6 +95,9 @@ func (f *clipFile) read(ofst int64) ([]byte, int) {
 			return nil, -1
 		} else {
 			dbgLog.Printf(" - - got '%s' data", data)
+			if !bytes.Equal(data, f.buffer) {
+				f.mTime = fuse.NewTimespec(time.Now())
+			}
 			f.buffer = data
 			f.needRead = false
 		}
@@ -110,15 +118,13 @@ func (f *clipFile) write(data []byte, ofst int64) (n int) {
 	n = copy(f.buffer[ofst:endofst], data)
 	dbgLog.Printf(" - - wrtten to '%s', now data is '%s'", f.path, string(f.buffer))
 	f.needFlush = true
-	/*
-		tmsp := fuse.Now()
-		node.stat.Ctim = tmsp
-		node.stat.Mtim = tmsp
-	*/
 	return
 }
 
 func (f *clipFile) trunc(size int64) int {
+	if len(f.buffer) == int(size) {
+		return 0
+	}
 	f.needFlush = true
 	f.buffer = f.buffer[:min(int(size), len(f.buffer))]
 	f.needRead = size != 0
@@ -134,12 +140,11 @@ func (f *clipFile) flush() (err int) {
 			err = -1
 		}
 	}
-	f.mTime = fuse.NewTimespec(time.Now())
-	f.aTime = fuse.NewTimespec(time.Now())
 	return
 }
 
 func (f *clipFile) close() int {
+	updMTime := f.needFlush || f.mode != fuse.O_RDONLY
 	f.flush()
 	// clipFilesLock.Lock()
 	// delete(clipFiles, f.path)
@@ -149,9 +154,13 @@ func (f *clipFile) close() int {
 	if f.openCount == 0 {
 		// reset it
 		f.mode = 0
-		f.buffer = []byte{}
+		// f.buffer = []byte{}
+
+		f.aTime = fuse.NewTimespec(time.Now())
+		if updMTime {
+			f.mTime = f.aTime
+		}
 	}
-	f.aTime = fuse.NewTimespec(time.Now())
 	dbgLog.Printf(" - - closing '%s'.", f.path)
 	return 0
 }
