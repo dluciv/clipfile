@@ -41,8 +41,10 @@ MCEdit, Vim, Emacs, Micro, Nano and Unix-like Far Manager work correctly. Window
 
 * Windows
 
+    ```
     > scoop bucket add nonportable
     > scoop install winfsp-np
+    ```
 
 * Unix-like (Linux, OS X) needs fuse3-compatible library to be installed
 
