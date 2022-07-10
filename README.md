@@ -29,8 +29,8 @@ and leave it working
 After launch, it will create virtual FS with files:
 
 * `info` with metainformation about how it works with clipboard
-* `clipboard` — readable (`< clipboard`), writeable (`> clipboard`) and appendable (`>> clipboard`) file, synchronizing with clipboard contents
-* `primary` (Linux only) — readable (and writable!) file to accesd primary (immediate) selection
+* `clipboard` — readable (`< clipboard`), writeable (`> clipboard`) and even appendable (`>> clipboard`) file, synchronizing with clipboard contents
+* `primary` (Linux only) — readable (and writable and appendable!) file to access primary (immediate) selection
 
 `clipboard` and `primary` files is even editable with the most of editors, which just do write file in-place: 
 MCEdit, Vim, Emacs, Micro, Nano and Unix-like Far Manager work correctly. Windows Far Manager fails for now.
@@ -48,6 +48,7 @@ MCEdit, Vim, Emacs, Micro, Nano and Unix-like Far Manager work correctly. Window
 
 ### Build
 
-    $ https://github.com/winfsp/cgofuse#how-to-build
+See [here](https://github.com/winfsp/cgofuse#how-to-build) how to build CGoFuse. Note `CGO_ENABLED` options. Then
+
     $ go get
     $ go build
