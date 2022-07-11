@@ -33,7 +33,9 @@ After launch, it will create virtual FS with files:
 * `primary` (Linux only) — readable (and writable and appendable!) file to access primary (immediate) selection
 
 `clipboard` and `primary` files is even editable with the most of editors, which just do write file in-place: 
-MCEdit, Vim, Emacs, Micro, Nano and Unix-like Far Manager work correctly. Windows Far Manager fails for now.
+MCEdit, Vim, Emacs, Micro, Nano and Far Manager for Unix work correctly.
+Some editors like Far Manager for Windows create temporary files, which clipfs does not allow. The simple workaround for it is
+to symlink (for Windows, Far Manager itself can help you =)) clipfile to any regular folder in which it can create temporary files and edit clipboard from there.
 
 ## Build
 
